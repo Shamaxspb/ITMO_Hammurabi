@@ -2,22 +2,25 @@
 #include <fstream>
 #include <string>
 
-// Function prototypes
-bool WasPlague();
+// Function 
 int AcrePrice();
 int HarvestPerAcre();
-void RatTax(int& currentWheatAmount, int& ratsDestroyed);
 
 void BuySellLand(int& currentWheatAmount, int& currentCityArea, int thisYearAcrePrice);
 void BuyLand(int& currentWheatAmount, int& currentCityArea, int thisYearAcrePrice);
 void SellLand(int& currentWheatAmount, int& currentCityArea, int thisYearAcrePrice);
 
+void WheatToEat(int& currentWheatAmount, int& wheatToEat);
+void WheatToSow(int& currentWheatAmount, int& currentCityArea, int& acresSown);
 
+void PeopleDied(int& currentPopulation, int wheatToEat, int& peopleDied);
+void PeopleArrived(int peopleDied, int thisYearHarvestPerAcre, int currentWheatAmount, int& currentPopulation);
 
-void PlayerInput(int& currentWheatAmount, int& currentCityArea, int& thisYearAcrePrice, int& wheatToEat, int& acresSown);
+void PlagueThreat(int& currentPopulation);
 
-void ReportToTheLord(int& currentWheatAmount, int& currentPopulation, int& currentCityArea, int wheatToEat,
-	int& thisYearHarvestPerAcre, int& thisYearAcrePrice, int& acresSown, int& ratsDestroyed, int& roundNumber, int& peopleDied);
+void TotalHarvest(int acresSown, int thisYearHarvestPerAcre, int currentPopulation, int& currentWheatAmount);
+void RatTax(int& currentWheatAmount);
+
 
 int main()
 {
@@ -34,7 +37,7 @@ int main()
 	int currentPopulation;
 	int currentCityArea;
 	int roundNumber = 1;
-	int peopleDied = 0;
+	int peopleDied;
 	//int peopleArrived;
 
 	// Yearly changing values
@@ -42,17 +45,12 @@ int main()
 	int thisYearHarvestPerAcre;
 	//int totalYearHarvest;
 	int acresSown;
-	int ratsDestroyed;
 
 	// Player's input (global)
-	int buySell;
 	int wheatToEat;
 
-	// Flags
-	bool buySellCheck = false;
 
-
-	//============================================================================================================================== GAME START
+	// GAME START
 
 	std::cout << "Greetings, my new Lord. The city welcomes you!\n" << std::endl;
 	std::cout << "Today our city has:\n"
@@ -65,12 +63,12 @@ int main()
 	currentPopulation = initialPopulation;
 
 	// Main loop
-	while (roundNumber <= 10 || currentPopulation > 0 || 
-		static_cast<float>(peopleDied) / static_cast<float>(currentPopulation) < 0.45)
+	do
 	{
 		thisYearAcrePrice = AcrePrice();
 		thisYearHarvestPerAcre = HarvestPerAcre();
 
+		// Player input
 		std::cout << "What do you desire, my Lord?" << std::endl << "Would you rather buy the land or sell it?" << std::endl;
 		std::cout << "1: Buy" << std::endl;
 		std::cout << "2: Sell" << std::endl;
@@ -78,33 +76,33 @@ int main()
 
 		BuySellLand(currentWheatAmount, currentCityArea, thisYearAcrePrice);
 
-		std::cout << "Breakpoint" << std::endl;
-		int q;
-		std::cin >> q;
-		
-		
+		WheatToEat(currentWheatAmount, wheatToEat);
+		WheatToSow(currentWheatAmount, currentCityArea, acresSown);
 
+		// Game response
+		std::cout << "My Lord, allow me to tell you..." << std::endl;
+		std::cout << "\tIn the year " << roundNumber << " of your honorable rule" << std::endl;
 
+		PeopleDied(currentPopulation, wheatToEat, peopleDied);
+		PeopleArrived(peopleDied, thisYearHarvestPerAcre, currentWheatAmount, currentPopulation);
 
-		/*PlayerInput(currentWheatAmount, currentCityArea, thisYearAcrePrice, wheatToEat, acresSown);
+		PlagueThreat(currentPopulation);
 
-		ReportToTheLord(currentWheatAmount, currentPopulation, currentCityArea,	thisYearHarvestPerAcre, thisYearAcrePrice,
-						wheatToEat, acresSown, ratsDestroyed, roundNumber, peopleDied);*/
+		std::cout << "\tCurrent city population is " << currentPopulation << " people;" << std::endl;
+
+		TotalHarvest(acresSown, thisYearHarvestPerAcre, currentPopulation, currentWheatAmount);
+		RatTax(currentWheatAmount);
+
+		std::cout << "\tCurrent city area is " << currentCityArea << " acres;" << std::endl;
+		std::cout << "\t1 acre of land cost " << thisYearAcrePrice << " bushels this year;" << std::endl;
+		std::cout << std::endl;
 
 		roundNumber++;
-	}
+
+	} while (roundNumber <= 10 || currentPopulation > 0 || static_cast<float>(peopleDied) / static_cast<float>(currentPopulation) < 0.45);
 }
 
 // Function block
-bool WasPlague()
-{
-	float plagueChance = (static_cast<float>(rand() % 100)) / (static_cast<float>(100));
-	if (plagueChance > 0.15)
-		return false;
-	else
-		return true;
-}
-
 int AcrePrice() { return rand() % 10 + 17; }
 
 int HarvestPerAcre() { return static_cast<int>(rand() % 6 + 1); }
@@ -170,7 +168,7 @@ void SellLand(int& currentWheatAmount, int& currentCityArea, int thisYearAcrePri
 		else
 			isAmountCorrect = true;
 
-		std::cout << "We now have " << acresToSell << " less acres of land." << std::endl << std::endl;
+		std::cout << "We now have " << acresToSell << " less acres of land." << std::endl;
 	}
 }
 
@@ -211,166 +209,62 @@ void BuySellLand(int& currentWheatAmount, int& currentCityArea, int thisYearAcre
 	}
 }
 
-
-
-void RatTax(int& currentWheatAmount, int& ratsDestroyed)
+void WheatToEat(int& currentWheatAmount, int& wheatToEat)
 {
-	float ratTax = (static_cast<float>(rand() % 8) / static_cast<float>(100));
-	ratsDestroyed = currentWheatAmount * ratTax;
-	currentWheatAmount -= ratsDestroyed;
+	// Correct amount input check
+	bool isAmountCorrect = false;
+
+	while (!isAmountCorrect)
+	{
+		std::cout << "\nHow many bushels of wheat do you command to use as food?  ";
+		std::cin >> wheatToEat;
+
+		if (wheatToEat > currentWheatAmount)
+			std::cout << "My Lord, we do not have that much wheat to feed." << std::endl;
+		else if (wheatToEat < 1)
+		{
+			std::cout << "My Lord, our people need something to eat." << std::endl;
+		}
+		else
+		{
+			currentWheatAmount -= wheatToEat;
+			isAmountCorrect = true;
+		}
+	}
 }
 
-void PlayerInput(int& currentWheatAmount, int& currentCityArea, int& thisYearAcrePrice, int& wheatToEat, int& acresSown)
+void WheatToSow(int& currentWheatAmount, int& currentCityArea, int& acresSown)
 {
-	// Player's input
-	int buySell;
-	int acresToBuy;
-	int acresToSell;
+	// Correct amount input check
+	bool isAmountCorrect = false;
+
 	int wheatToSow;
 
-	// Flags
-	bool buySellCheck = false;
-	bool amountCheck = false;
-	bool enoughWheat = false;
-
-	std::cout << "What do you desire, my Lord?" << std::endl << "Would you rather buy the land or sell it?" << std::endl;
-	std::cout << "1: Buy" << std::endl;
-	std::cout << "2: Sell" << std::endl;
-
-	while (!buySellCheck)
+	while (!isAmountCorrect)
 	{
-		std::cin >> buySell;
+		std::cout << "How many bushels of wheat do you command to sow?  ";
+		std::cin >> wheatToSow;
+		acresSown = wheatToSow * 2;
 
-		if (buySell == 1)
+		if (wheatToSow > currentWheatAmount)
+			std::cout << "My Lord, we do not have that much wheat to sow." << std::endl;
+		else if (acresSown > currentCityArea)
 		{
-			std::cout << "How many acres of land do you command to buy?\t";
-			while (!amountCheck)
-			{
-				std::cin >> acresToBuy;
-
-				if (acresToBuy < 1)
-				{
-					std::cout << "We have to buy more than nothing.\n" << std::endl;
-					std::cout << "How many acres of land do you command to buy?\t";
-				}
-				else if (currentWheatAmount - (acresToBuy * thisYearAcrePrice) < 0)
-				{
-					std::cout << "My Lord, we do not have enough wheat to buy that much land.\n" << std::endl;
-					std::cout << "How many acres of land do you command to buy?\t";
-				}
-				else
-					amountCheck = true;
-			}
-			amountCheck = false;
-
-			currentWheatAmount -= (acresToBuy * thisYearAcrePrice);
-			currentCityArea += acresToBuy;
-
-			std::cout << "We now have " << acresToBuy << " more acres of land." << std::endl << std::endl;
-			buySellCheck = true;
-		}
-		else if (buySell == 2)
-		{
-			std::cout << "How many acres of land do you command to sell?\t";
-			while (!amountCheck)
-			{
-				std::cin >> acresToSell;
-
-				if (acresToSell < 1)
-				{
-					std::cout << "We have to sell more than nothing.\n" << std::endl;
-					std::cout << "How many acres of land do you command to sell?\t";
-				}
-				else if (currentCityArea < acresToSell)
-				{
-					std::cout << "My Lord, we do not have that much land to sell." << std::endl;
-					std::cout << "How many acres of land do you command to sell?\t";
-				}
-				else
-					amountCheck = true;
-			}
-			amountCheck = false;
-
-			currentWheatAmount += (acresToSell * thisYearAcrePrice);
-			currentCityArea -= acresToSell;
-
-			std::cout << "We now have " << acresToSell << " less acres of land." << std::endl << std::endl;
-			buySellCheck = true;
+			std::cout << "My Lord, we do not have that much land to be sown." << std::endl;
 		}
 		else
 		{
-			std::cout << "I do not understand you, my Lord..." << std::endl;
-			std::cout << "\nWould you rather buy the land or sell it?" << std::endl;
-			std::cout << "1: Buy" << std::endl;
-			std::cout << "2: Sell" << std::endl;
+			currentWheatAmount -= wheatToSow;
+			isAmountCorrect = true;
 		}
-	}
 
-	while (!enoughWheat)
-	{
-		while (!amountCheck)
-		{
-			std::cout << "How many bushels of wheat do you command to use as food?  ";
-			std::cin >> wheatToEat;
-
-			if (wheatToEat > currentWheatAmount)
-				std::cout << "My Lord, we do not have that much wheat to feed.\n" << std::endl;
-			else if (wheatToEat < 1)
-			{
-				std::cout << "My Lord, our people need something to eat." << std::endl;
-			}
-			else
-			{
-				currentWheatAmount -= wheatToEat;
-				amountCheck = true;
-			}
-
-			std::cout << std::endl;
-		}
-		amountCheck = false;
-
-		while (!amountCheck)
-		{
-			std::cout << "How many bushels of wheat do you command to sow?  ";
-			std::cin >> wheatToSow;
-
-			if (wheatToSow > currentWheatAmount)
-				std::cout << "My Lord, we do not have that much wheat to sow.\n" << std::endl;
-			else if (wheatToSow * 2 > currentCityArea)
-			{
-				std::cout << "My Lord, we do not have that much land to be sown." << std::endl;
-			}
-			else
-			{
-				acresSown = wheatToSow * 2;
-				currentWheatAmount -= wheatToSow;
-				amountCheck = true;
-			}
-
-			std::cout << std::endl;
-		}
-		amountCheck = false;
-
-		/*if (currentWheatAmount < (wheatToEat + wheatToSow))
-		{
-			std::cout << "My Lord, we do not have that much wheat. You should redistribute it.\n" << std::endl;
-		}
-		else
-			enoughWheat = true;*/
-		enoughWheat = true;
+		std::cout << std::endl;
 	}
 }
 
-void ReportToTheLord(int& currentWheatAmount, int& currentPopulation, int & currentCityArea, int wheatToEat, 
-	int& thisYearHarvestPerAcre, int& thisYearAcrePrice, int& acresSown, int& ratsDestroyed, int& roundNumber, int& peopleDied)
+void PeopleDied(int& currentPopulation, int wheatToEat, int& peopleDied)
 {
-	int peopleArrived;
-	int totalYearHarvest;
-
-	std::cout << "My Lord, allow me to tell you..." << std::endl;
-	std::cout << "\tIn the year " << roundNumber << " of your honorable rule" << std::endl;
-
-	peopleDied = currentPopulation - (static_cast<int>(wheatToEat / 20));
+	peopleDied = currentPopulation - (wheatToEat / 20);
 	if (peopleDied < 0)
 		peopleDied = 0;
 
@@ -380,8 +274,11 @@ void ReportToTheLord(int& currentWheatAmount, int& currentPopulation, int & curr
 		std::cout << "\t" << peopleDied << " people starved to death, ";
 	else
 		std::cout << "\tNobody starved to death, ";
+}
 
-	peopleArrived = (static_cast<int>(peopleDied) / 2) + ((5 - thisYearHarvestPerAcre) * currentWheatAmount / 600) + 1;
+void PeopleArrived(int peopleDied, int thisYearHarvestPerAcre, int currentWheatAmount, int& currentPopulation)
+{
+	int peopleArrived = peopleDied / 2 + (5 - thisYearHarvestPerAcre) * currentWheatAmount / 600 + 1;
 	if (peopleArrived < 0)
 		peopleArrived = 0;
 	if (peopleArrived > 50)
@@ -391,33 +288,38 @@ void ReportToTheLord(int& currentWheatAmount, int& currentPopulation, int & curr
 	if (peopleArrived > 0)
 		std::cout << peopleArrived << " people arrived in our great city;" << std::endl;
 	else
-		std::cout << "\tNobody arrived in our great city;" << std::endl;
+		std::cout << " nobody arrived in our great city;" << std::endl;
+}
 
-	if (WasPlague())
+void PlagueThreat(int& currentPopulation)
+{
+	float plagueChance = (static_cast<float>(rand() % 100)) / (static_cast<float>(100));
+	if (plagueChance <= 0.15)
 	{
 		currentPopulation *= 0.5;
 		std::cout << "\tThe plague annihilated half of the city population;" << std::endl;
 	}
 	else
 		std::cout << "\tThis year the plague passed by;" << std::endl;
+}
 
-	std::cout << "\tCurrent city population is " << currentPopulation << " people;" << std::endl;
-
-	totalYearHarvest = acresSown * thisYearHarvestPerAcre;
+void TotalHarvest(int acresSown, int thisYearHarvestPerAcre, int currentPopulation, int& currentWheatAmount)
+{
+	int totalHarvest = acresSown * thisYearHarvestPerAcre;
 	if (acresSown > currentPopulation * 10)
-		totalYearHarvest = currentPopulation * 10;
+		totalHarvest = currentPopulation * 10;
 
-	currentWheatAmount += totalYearHarvest;
+	currentWheatAmount += totalHarvest;
 
-	std::cout << "\tWe collected " << totalYearHarvest << " bushels of wheat, " << thisYearHarvestPerAcre << " bushel per acre;" << std::endl;
+	std::cout << "\tWe collected " << totalHarvest << " bushels of wheat, " << thisYearHarvestPerAcre << " bushel per acre;" << std::endl;
+}
 
-	RatTax(currentWheatAmount, ratsDestroyed);
+void RatTax(int& currentWheatAmount)
+{
+	float ratio = (static_cast<float>(rand() % 8) / 100);
+	int ratTax = currentWheatAmount * ratio;
+	
+	currentWheatAmount -= ratTax;
 
-	std::cout << "\tRats destroyed " << ratsDestroyed << " bushels of wheat, leaving us " << currentWheatAmount << " bushels in our barns;" << std::endl;
-
-	std::cout << "\tCurrent city area is " << currentCityArea << " acres;" << std::endl;
-
-	std::cout << "\t1 acre of land now costs " << thisYearAcrePrice << " bushels;" << std::endl;
-
-	std::cout << std::endl;
+	std::cout << "\tRats destroyed " << ratTax << " bushels of wheat, leaving us " << currentWheatAmount << " bushels in our barns;" << std::endl;
 }
