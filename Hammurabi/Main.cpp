@@ -2,7 +2,7 @@
 #include <fstream>
 #include <string>
 
-// Function 
+// Function prototypes
 int AcrePrice();
 int HarvestPerAcre();
 
@@ -21,10 +21,12 @@ void PlagueThreat(int& currentPopulation);
 void TotalHarvest(int acresSown, int thisYearHarvestPerAcre, int currentPopulation, int& currentWheatAmount);
 void RatTax(int& currentWheatAmount);
 
+bool PlayFurther();
+bool isGG(bool playFurther, int currentPopulation, int roundNumber, bool peopleAcception);
+
 
 int main()
 {
-	setlocale(LC_ALL, "ru");
 	srand(time(NULL));
 
 	// Starting values
@@ -48,10 +50,17 @@ int main()
 
 	// Player's input (global)
 	int wheatToEat;
+	int newGame;
+
+	int earlyPopulation;
+	float starvationPercent;
+	bool peopleAcception = true;
+	bool playFurther = true;
+
+	std::fstream save;
 
 
 	// GAME START
-
 	std::cout << "Greetings, my new Lord. The city welcomes you!\n" << std::endl;
 	std::cout << "Today our city has:\n"
 		<< initialCityArea << " acres of land\n"
@@ -62,17 +71,37 @@ int main()
 	currentCityArea = initialCityArea;
 	currentPopulation = initialPopulation;
 
-	// Main loop
-	do
+	save.open("GameSave.txt", std::fstream::in | std::fstream::out);
+	if (!save.is_open())
 	{
+		std::cout << "Couln't open save" << std::endl;
+	}
+	else
+	{
+		save << currentCityArea << "\n";
+		save << currentPopulation << "\n";
+		save << currentWheatAmount << "\n";
+	}
+
+	save.close();
+
+	// Main loop
+	while (!isGG(playFurther, currentPopulation, roundNumber, peopleAcception))
+	{
+		if (roundNumber != 1)
+		{
+			playFurther = PlayFurther();
+			if (!playFurther)
+				break;
+		}
+		
+		earlyPopulation = currentPopulation;
 		thisYearAcrePrice = AcrePrice();
 		thisYearHarvestPerAcre = HarvestPerAcre();
 
 		// Player input
 		std::cout << "What do you desire, my Lord?" << std::endl << "Would you rather buy the land or sell it?" << std::endl;
-		std::cout << "1: Buy" << std::endl;
-		std::cout << "2: Sell" << std::endl;
-		std::cout << "3: Do nothing" << std::endl;
+		std::cout << "1: Buy\n2: Sell\n3: Do nothing" << std::endl;
 
 		BuySellLand(currentWheatAmount, currentCityArea, thisYearAcrePrice);
 
@@ -99,7 +128,47 @@ int main()
 
 		roundNumber++;
 
-	} while (roundNumber <= 10 || currentPopulation > 0 || static_cast<float>(peopleDied) / static_cast<float>(currentPopulation) < 0.45);
+		starvationPercent = static_cast<float>(peopleDied) / static_cast<float>(earlyPopulation);
+		if (starvationPercent > 0.45)
+			peopleAcception = false;
+		else
+			peopleAcception = true;
+
+		
+		// Saving game
+		/*save.open("GameSave.txt", std::fstream::in | std::fstream::out);
+		if (!save.is_open())
+		{
+			std::cout << "Couln't open save" << std::endl;
+		}
+		else
+		{
+			save << currentCityArea << "\n";
+			save << currentPopulation << "\n";
+			save << currentWheatAmount << "\n";
+		}
+
+		save.close();*/
+	}
+
+	if (playFurther == false)
+	{
+		std::cout << "You decided to quit game.\nThe world state will be saved." << std::endl;
+		// implement saving
+	}
+		
+
+	if (currentPopulation == 0)
+		std::cout << "Your city extincted. You have no more people to rule." << std::endl;
+
+	if (peopleAcception == false)
+		std::cout << "More than 45% of your people died of starvation. People do not want you to rule anymore." << std::endl;
+
+	if (roundNumber > 10)
+	{
+		std::cout << "GG! Good job" << std::endl;
+		// Put after game stats here
+	}
 }
 
 // Function block
@@ -201,9 +270,7 @@ void BuySellLand(int& currentWheatAmount, int& currentCityArea, int thisYearAcre
 		default:
 			std::cout << "I do not understand you, my Lord..." << std::endl;
 			std::cout << "\nWould you rather buy the land or sell it?" << std::endl;
-			std::cout << "1: Buy" << std::endl;
-			std::cout << "2: Sell" << std::endl;
-			std::cout << "3: Do nothing" << std::endl;
+			std::cout << "1: Buy\n2: Sell\n3: Do nothing" << std::endl;
 			break;
 		}
 	}
@@ -322,4 +389,60 @@ void RatTax(int& currentWheatAmount)
 	currentWheatAmount -= ratTax;
 
 	std::cout << "\tRats destroyed " << ratTax << " bushels of wheat, leaving us " << currentWheatAmount << " bushels in our barns;" << std::endl;
+}
+
+bool PlayFurther()
+{
+	bool isCorrect = false;
+	int choice;
+
+	while (!isCorrect)
+	{
+		std::cout << "1: Play further\n2: Quit game" << std::endl;
+		std::cin >> choice;
+		std::cout << std::endl;
+
+		switch (choice)
+		{
+		case 1:
+			return true;
+			isCorrect = true;
+			break;
+
+		case 2:
+			return false;
+			isCorrect = true;
+			break;
+
+		default:
+			std::cout << "I do not understand you, my Lord..." << std::endl;
+			std::cout << "1: Play further\n2: Quit game" << std::endl;
+			break;
+		}
+	}
+}
+
+bool isGG(bool playFurther, int currentPopulation, int roundNumber, bool peopleAcception)
+{
+	if (peopleAcception == true)
+	{
+		if (currentPopulation != 0)
+		{
+			if (roundNumber <= 10)
+			{
+				if (playFurther == true)
+				{
+					return false;
+				}
+				else 
+					return true;
+			}
+			else 
+				return true;
+		}
+		else
+			return true;
+	}
+	else
+		return true;
 }
