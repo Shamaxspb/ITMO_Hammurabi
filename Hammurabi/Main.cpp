@@ -5,12 +5,18 @@
 // Function prototypes
 bool WasPlague();
 int AcrePrice();
-int Harvest();
+int HarvestPerAcre();
 void RatTax(int& currentWheatAmount, int& ratsDestroyed);
+
+void BuySellLand(int& currentWheatAmount, int& currentCityArea, int thisYearAcrePrice);
+void BuyLand(int& currentWheatAmount, int& currentCityArea, int thisYearAcrePrice);
+void SellLand(int& currentWheatAmount, int& currentCityArea, int thisYearAcrePrice);
+
+
 
 void PlayerInput(int& currentWheatAmount, int& currentCityArea, int& thisYearAcrePrice, int& wheatToEat, int& acresSown);
 
-void ReportToTheLord(int& currentWheatAmount, int& currentPopulation, int& currentCityArea, int& wheatToEat,
+void ReportToTheLord(int& currentWheatAmount, int& currentPopulation, int& currentCityArea, int wheatToEat,
 	int& thisYearHarvestPerAcre, int& thisYearAcrePrice, int& acresSown, int& ratsDestroyed, int& roundNumber, int& peopleDied);
 
 int main()
@@ -39,7 +45,11 @@ int main()
 	int ratsDestroyed;
 
 	// Player's input (global)
+	int buySell;
 	int wheatToEat;
+
+	// Flags
+	bool buySellCheck = false;
 
 
 	//============================================================================================================================== GAME START
@@ -59,15 +69,27 @@ int main()
 		static_cast<float>(peopleDied) / static_cast<float>(currentPopulation) < 0.45)
 	{
 		thisYearAcrePrice = AcrePrice();
-		thisYearHarvestPerAcre = Harvest();
+		thisYearHarvestPerAcre = HarvestPerAcre();
 
-		PlayerInput(currentWheatAmount, currentCityArea, thisYearAcrePrice, wheatToEat, acresSown);
+		std::cout << "What do you desire, my Lord?" << std::endl << "Would you rather buy the land or sell it?" << std::endl;
+		std::cout << "1: Buy" << std::endl;
+		std::cout << "2: Sell" << std::endl;
+		std::cout << "3: Do nothing" << std::endl;
 
-		/*int q;
-		std::cin >> q;*/
+		BuySellLand(currentWheatAmount, currentCityArea, thisYearAcrePrice);
+
+		std::cout << "Breakpoint" << std::endl;
+		int q;
+		std::cin >> q;
+		
+		
+
+
+
+		/*PlayerInput(currentWheatAmount, currentCityArea, thisYearAcrePrice, wheatToEat, acresSown);
 
 		ReportToTheLord(currentWheatAmount, currentPopulation, currentCityArea,	thisYearHarvestPerAcre, thisYearAcrePrice,
-						wheatToEat, acresSown, ratsDestroyed, roundNumber, peopleDied);
+						wheatToEat, acresSown, ratsDestroyed, roundNumber, peopleDied);*/
 
 		roundNumber++;
 	}
@@ -85,7 +107,111 @@ bool WasPlague()
 
 int AcrePrice() { return rand() % 10 + 17; }
 
-int Harvest() { return static_cast<int>(rand() % 6 + 1); }
+int HarvestPerAcre() { return static_cast<int>(rand() % 6 + 1); }
+
+void BuyLand(int& currentWheatAmount, int& currentCityArea, int thisYearAcrePrice)
+{
+	// Correct amount input check
+	bool isAmountCorrect = false;
+
+	// Player input
+	int acresToBuy;
+
+	std::cout << "How many acres of land do you command to buy?\t";
+
+	while (!isAmountCorrect)
+	{
+		std::cin >> acresToBuy;
+
+		if (acresToBuy < 1)
+		{
+			std::cout << "We have to buy more than nothing.\n" << std::endl;
+			std::cout << "How many acres of land do you command to buy?\t";
+		}
+		else if (currentWheatAmount - (acresToBuy * thisYearAcrePrice) < 0)
+		{
+			std::cout << "My Lord, we do not have enough wheat to buy that much land.\n" << std::endl;
+			std::cout << "How many acres of land do you command to buy?\t";
+		}
+		else
+			isAmountCorrect = true;
+
+		currentWheatAmount -= (acresToBuy * thisYearAcrePrice);
+		currentCityArea += acresToBuy;
+
+		std::cout << "We now have " << acresToBuy << " more acres of land." << std::endl << std::endl;
+	}
+}
+
+void SellLand(int& currentWheatAmount, int& currentCityArea, int thisYearAcrePrice)
+{
+	// Correct amount input check
+	bool isAmountCorrect = false;
+
+	// Player input
+	int acresToSell;
+
+	std::cout << "How many acres of land do you command to sell?\t";
+
+	while (!isAmountCorrect)
+	{
+		std::cin >> acresToSell;
+
+		if (acresToSell < 1)
+		{
+			std::cout << "We have to sell more than nothing.\n" << std::endl;
+			std::cout << "How many acres of land do you command to sell?\t";
+		}
+		else if (currentCityArea < acresToSell)
+		{
+			std::cout << "My Lord, we do not have that much land to sell." << std::endl;
+			std::cout << "How many acres of land do you command to sell?\t";
+		}
+		else
+			isAmountCorrect = true;
+
+		std::cout << "We now have " << acresToSell << " less acres of land." << std::endl << std::endl;
+	}
+}
+
+void BuySellLand(int& currentWheatAmount, int& currentCityArea, int thisYearAcrePrice)
+{
+	// Correct input check flag
+	bool buySellCheck = false;
+
+	while (!buySellCheck)
+	{
+		int buySell;
+		std::cin >> buySell;
+
+		switch (buySell)
+		{
+		case 1:
+			BuyLand(currentWheatAmount, currentCityArea, thisYearAcrePrice);
+			buySellCheck = true;
+			break;
+
+		case 2:
+			SellLand(currentWheatAmount, currentCityArea, thisYearAcrePrice);
+			buySellCheck = true;
+			break;
+
+		case 3:
+			buySellCheck = true;
+			break;
+
+		default:
+			std::cout << "I do not understand you, my Lord..." << std::endl;
+			std::cout << "\nWould you rather buy the land or sell it?" << std::endl;
+			std::cout << "1: Buy" << std::endl;
+			std::cout << "2: Sell" << std::endl;
+			std::cout << "3: Do nothing" << std::endl;
+			break;
+		}
+	}
+}
+
+
 
 void RatTax(int& currentWheatAmount, int& ratsDestroyed)
 {
@@ -235,7 +361,7 @@ void PlayerInput(int& currentWheatAmount, int& currentCityArea, int& thisYearAcr
 	}
 }
 
-void ReportToTheLord(int& currentWheatAmount, int& currentPopulation, int & currentCityArea, int& wheatToEat, 
+void ReportToTheLord(int& currentWheatAmount, int& currentPopulation, int & currentCityArea, int wheatToEat, 
 	int& thisYearHarvestPerAcre, int& thisYearAcrePrice, int& acresSown, int& ratsDestroyed, int& roundNumber, int& peopleDied)
 {
 	int peopleArrived;
