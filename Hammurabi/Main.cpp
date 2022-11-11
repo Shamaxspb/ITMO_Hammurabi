@@ -1,6 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <vector>
+#include <iterator>
 
 // Function prototypes
 int AcrePrice();
@@ -24,6 +26,9 @@ void RatTax(int& currentWheatAmount);
 bool PlayFurther();
 bool isGG(bool playFurther, int currentPopulation, int roundNumber, bool peopleAcception);
 
+void SaveGame(int roundNumber, int currentWheatAmount, int currentPopulation, int currentCityArea);
+void LoadGame(int& roundNumber, int& currentWheatAmount, int& currentPopulation, int& currentCityArea);
+void NewGame(int& roundNumber, int& currentWheatAmount, int& currentCityArea, int& currentPopulation);
 
 int main()
 {
@@ -38,14 +43,12 @@ int main()
 	int currentWheatAmount;
 	int currentPopulation;
 	int currentCityArea;
-	int roundNumber = 1;
+	int roundNumber;
 	int peopleDied;
-	//int peopleArrived;
 
 	// Yearly changing values
 	int thisYearAcrePrice;
 	int thisYearHarvestPerAcre;
-	//int totalYearHarvest;
 	int acresSown;
 
 	// Player's input (global)
@@ -56,35 +59,36 @@ int main()
 	float starvationPercent;
 	bool peopleAcception = true;
 	bool playFurther = true;
+	bool isGameStart = false;
 
-	std::fstream save;
+	std::cout << "1: Start new game\n2: Continue previous game" << std::endl;
+	
+	while (!isGameStart)
+	{
+		std::cin >> newGame;
+		std::cout << std::endl;
 
+		if (newGame == 1)
+		{
+			NewGame(roundNumber, currentWheatAmount, currentCityArea, currentPopulation);
+			isGameStart = true;
+		}
+		else if (newGame == 2)
+		{
+			LoadGame(roundNumber, currentWheatAmount, currentPopulation, currentCityArea);
+			isGameStart = true;
+		}
+		else
+			std::cout << "Incorrect option" << std::endl;
+	}
 
-	// GAME START
-	std::cout << "Greetings, my new Lord. The city welcomes you!\n" << std::endl;
-	std::cout << "Today our city has:\n"
-		<< initialCityArea << " acres of land\n"
-		<< initialPopulation << " city dwellers\n"
-		<< initialWheatAmount << " bushels of wheat.\n" << std::endl;
+	
 
+	roundNumber = 1;
 	currentWheatAmount = initialWheatAmount;
 	currentCityArea = initialCityArea;
 	currentPopulation = initialPopulation;
-
-	save.open("GameSave.txt", std::fstream::in | std::fstream::out);
-	if (!save.is_open())
-	{
-		std::cout << "Couln't open save" << std::endl;
-	}
-	else
-	{
-		save << currentCityArea << "\n";
-		save << currentPopulation << "\n";
-		save << currentWheatAmount << "\n";
-	}
-
-	save.close();
-
+	
 	// Main loop
 	while (!isGG(playFurther, currentPopulation, roundNumber, peopleAcception))
 	{
@@ -133,28 +137,12 @@ int main()
 			peopleAcception = false;
 		else
 			peopleAcception = true;
-
-		
-		// Saving game
-		/*save.open("GameSave.txt", std::fstream::in | std::fstream::out);
-		if (!save.is_open())
-		{
-			std::cout << "Couln't open save" << std::endl;
-		}
-		else
-		{
-			save << currentCityArea << "\n";
-			save << currentPopulation << "\n";
-			save << currentWheatAmount << "\n";
-		}
-
-		save.close();*/
 	}
 
 	if (playFurther == false)
 	{
 		std::cout << "You decided to quit game.\nThe world state will be saved." << std::endl;
-		// implement saving
+		SaveGame(roundNumber, currentWheatAmount, currentPopulation, currentCityArea);
 	}
 		
 
@@ -166,7 +154,7 @@ int main()
 
 	if (roundNumber > 10)
 	{
-		std::cout << "GG! Good job" << std::endl;
+		std::cout << "GG! Gud dzhob" << std::endl;
 		// Put after game stats here
 	}
 }
@@ -206,7 +194,7 @@ void BuyLand(int& currentWheatAmount, int& currentCityArea, int thisYearAcrePric
 		currentWheatAmount -= (acresToBuy * thisYearAcrePrice);
 		currentCityArea += acresToBuy;
 
-		std::cout << "We now have " << acresToBuy << " more acres of land." << std::endl << std::endl;
+		std::cout << "We now have " << acresToBuy << " more acres of land and " << currentWheatAmount << " bushels of wheat in total" << std::endl;
 	}
 }
 
@@ -237,7 +225,10 @@ void SellLand(int& currentWheatAmount, int& currentCityArea, int thisYearAcrePri
 		else
 			isAmountCorrect = true;
 
-		std::cout << "We now have " << acresToSell << " less acres of land." << std::endl;
+		currentWheatAmount += (acresToSell * thisYearAcrePrice);
+		currentCityArea -= acresToSell;
+
+		std::cout << "We now have " << acresToSell << " less acres of land and " << currentWheatAmount << " bushels of wheat in total" << std::endl;
 	}
 }
 
@@ -445,4 +436,93 @@ bool isGG(bool playFurther, int currentPopulation, int roundNumber, bool peopleA
 	}
 	else
 		return true;
+}
+
+void SaveGame(int roundNumber, int currentWheatAmount, int currentPopulation, int currentCityArea)
+{
+	std::fstream save;
+	std::string filename = "GameSave.txt";
+
+	save.open(filename, std::fstream::in | std::fstream::out);
+
+	if (save.is_open())
+	{
+		save << roundNumber << "\n";
+		save << currentWheatAmount << "\n";
+		save << currentPopulation << "\n";
+		save << currentCityArea;
+	}
+	else
+	{
+		save.clear();
+		save.open(filename, std::ios::out);
+		save.close();
+		save.open(filename);
+
+		save << roundNumber << "\n";
+		save << currentWheatAmount << "\n";
+		save << currentPopulation << "\n";
+		save << currentCityArea;
+	}
+
+	save.close();
+}
+
+void LoadGame(int& roundNumber, int& currentWheatAmount, int& currentPopulation, int& currentCityArea)
+{
+	std::fstream save;
+	std::string filename = "GameSave.txt";
+
+	std::string buffer;
+	std::vector<int> sValues;
+	
+	save.open(filename, std::fstream::in | std::fstream::out);
+
+	if (save.is_open())
+	{
+		while (!save.eof())
+		{
+			save >> buffer;
+			sValues.push_back(std::stoi(buffer));
+		}
+
+		std::vector<int>::iterator s_it = sValues.begin();
+
+		roundNumber = *s_it;
+		++s_it;
+		currentWheatAmount = *s_it;
+		++s_it;
+		currentPopulation = *s_it;
+		++s_it;
+		currentCityArea = *s_it;
+	}
+	else
+	{
+		std::cout << "Couldn't open save" << std::endl;
+	}
+
+	std::cout << "Welcome back, my Lord!" << std::endl;
+	std::cout << "This is year " << roundNumber << " of your rule" << std::endl;
+	std::cout << "Today our city has:\n"
+		<< currentWheatAmount << " bushels of wheat.\n"
+		<< currentPopulation << " city dwellers\n"
+		<< currentCityArea << " acres of land\n" << std::endl;
+}
+
+void NewGame(int& roundNumber, int& currentWheatAmount, int& currentCityArea, int& currentPopulation)
+{
+	int initialPopulation = 100;
+	int initialWheatAmount = 2800;
+	int initialCityArea = 1000;
+
+	std::cout << "Greetings, my new Lord. The city welcomes you!\n" << std::endl;
+	std::cout << "Today our city has:\n"
+		<< initialWheatAmount << " bushels of wheat.\n"
+		<< initialPopulation << " city dwellers\n"
+		<< initialCityArea << " acres of land\n" << std::endl;
+
+	roundNumber = 1;
+	currentWheatAmount = initialWheatAmount;
+	currentCityArea = initialCityArea;
+	currentPopulation = initialPopulation;
 }
