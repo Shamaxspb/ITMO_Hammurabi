@@ -45,6 +45,8 @@ int main()
 	int currentCityArea;
 	int roundNumber;
 	int peopleDied;
+	int earlyPopulation;
+	float starvationPercent;
 
 	// Yearly changing values
 	int thisYearAcrePrice;
@@ -55,12 +57,18 @@ int main()
 	int wheatToEat;
 	int newGame;
 
-	int earlyPopulation;
-	float starvationPercent;
+	// Flags
 	bool peopleAcception = true;
 	bool playFurther = true;
 	bool isGameStart = false;
 
+	// Post game stats
+	float averageAnnualDeathPercent = 0;
+	float acrePerSoul;
+	std::vector<int> annualDeathPercent;
+
+
+	// Start / Continue
 	std::cout << "1: Start new game\n2: Continue previous game" << std::endl;
 	
 	while (!isGameStart)
@@ -81,13 +89,6 @@ int main()
 		else
 			std::cout << "Incorrect option" << std::endl;
 	}
-
-	
-
-	roundNumber = 1;
-	currentWheatAmount = initialWheatAmount;
-	currentCityArea = initialCityArea;
-	currentPopulation = initialPopulation;
 	
 	// Main loop
 	while (!isGG(playFurther, currentPopulation, roundNumber, peopleAcception))
@@ -137,7 +138,22 @@ int main()
 			peopleAcception = false;
 		else
 			peopleAcception = true;
+
+		annualDeathPercent.push_back(starvationPercent * 100);
 	}
+
+	// Average annual death percent
+	for (auto di = annualDeathPercent.begin(); di != annualDeathPercent.end(); di++)
+	{
+		averageAnnualDeathPercent += *di;
+	}
+
+	averageAnnualDeathPercent /= annualDeathPercent.size();
+	std::cout << "\nAverage annual deaths:\t" << averageAnnualDeathPercent << "%" << std::endl;
+
+	// Amount of acres per soul
+	acrePerSoul = static_cast<float>(currentCityArea) / currentPopulation;
+	std::cout << "Acre per soul:\t" << acrePerSoul << std::endl;
 
 	if (playFurther == false)
 	{
@@ -154,9 +170,33 @@ int main()
 
 	if (roundNumber > 10)
 	{
-		std::cout << "GG! Gud dzhob" << std::endl;
-		// Put after game stats here
+		std::cout << "GG! Good job!" << std::endl;
+		// Post game stats here
+		if (averageAnnualDeathPercent > 33 && acrePerSoul < 7)
+			std::cout << "Because of your incompetence in management, the people staged a riot, and expelled you from their city."
+			<< "\nNow you are forced to eke out a miserable existence in exile." << std::endl;
+		else if (averageAnnualDeathPercent > 10 && acrePerSoul < 9)
+			std::cout << "You ruled with an iron hand, like Neroand Ivan the Terrible."
+			<< "The people have breathed a sigh of relief, and no one wants to see you as a ruler anymore." << std::endl;
+		else if (averageAnnualDeathPercent > 3 && acrePerSoul < 10)
+			std::cout << "You did quite well, of course, you have detractors, "
+			<< "but many would like to see you at the head of the city again." << std::endl;
+		else
+			std::cout << "Fantastic! Charlemagne, Disraeliand Jefferson couldn't have done better together!" << std::endl;
 	}
+
+	// Post game stats here
+	if (averageAnnualDeathPercent > 33 && acrePerSoul < 7)
+		std::cout << "Because of your incompetence in management, the people staged a riot, and expelled you from their city."
+		<< "\nNow you are forced to eke out a miserable existence in exile." << std::endl;
+	else if (averageAnnualDeathPercent > 10 && acrePerSoul < 9)
+		std::cout << "You ruled with an iron hand, like Neroand Ivan the Terrible."
+		<< "The people have breathed a sigh of relief, and no one wants to see you as a ruler anymore." << std::endl;
+	else if (averageAnnualDeathPercent > 3 && acrePerSoul < 10)
+		std::cout << "You did quite well, of course, you have detractors, "
+		<< "but many would like to see you at the head of the city again." << std::endl;
+	else
+		std::cout << "Fantastic! Charlemagne, Disraeliand Jefferson couldn't have done better together!" << std::endl;		
 }
 
 // Function block
