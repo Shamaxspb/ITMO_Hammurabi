@@ -34,11 +34,6 @@ int main()
 {
 	srand(time(NULL));
 
-	// Starting values
-	int initialPopulation = 100;
-	int initialWheatAmount = 2800;
-	int initialCityArea = 1000;
-
 	// Updated values
 	int currentWheatAmount;
 	int currentPopulation;
@@ -161,7 +156,6 @@ int main()
 		SaveGame(roundNumber, currentWheatAmount, currentPopulation, currentCityArea);
 	}
 		
-
 	if (currentPopulation == 0)
 		std::cout << "Your city extincted. You have no more people to rule." << std::endl;
 
@@ -171,21 +165,10 @@ int main()
 	if (roundNumber > 10)
 	{
 		std::cout << "GG! Good job!" << std::endl;
-		// Post game stats here
-		if (averageAnnualDeathPercent > 33 && acrePerSoul < 7)
-			std::cout << "Because of your incompetence in management, the people staged a riot, and expelled you from their city."
-			<< "\nNow you are forced to eke out a miserable existence in exile." << std::endl;
-		else if (averageAnnualDeathPercent > 10 && acrePerSoul < 9)
-			std::cout << "You ruled with an iron hand, like Neroand Ivan the Terrible."
-			<< "The people have breathed a sigh of relief, and no one wants to see you as a ruler anymore." << std::endl;
-		else if (averageAnnualDeathPercent > 3 && acrePerSoul < 10)
-			std::cout << "You did quite well, of course, you have detractors, "
-			<< "but many would like to see you at the head of the city again." << std::endl;
-		else
-			std::cout << "Fantastic! Charlemagne, Disraeliand Jefferson couldn't have done better together!" << std::endl;
 	}
 
 	// Post game stats here
+	// Чтобы статистика и результат выводились только по успешном завершении игры, надо этот блок положить в if (roundNumber > 10)
 	if (averageAnnualDeathPercent > 33 && acrePerSoul < 7)
 		std::cout << "Because of your incompetence in management, the people staged a riot, and expelled you from their city."
 		<< "\nNow you are forced to eke out a miserable existence in exile." << std::endl;
